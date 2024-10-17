@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>User Registration</h1> 
+    <!-- Form to Add or Update a User -->
+    <form id="user-form">
+        <input type="hidden" id="userId" />
+        <input type="text" id="name" placeholder="Enter name" required/><br>
+        <input type="email" id="email" placeholder="Enter email" required/><br>
+        <input type="password" id ="password" placeholder="Enter Password" required/><br>
+        <button type="submit">Save User</button>
+    </form>
+    <!-- Display User List -->
+    <h2>Users</h2>
+    <ul id="user-list"></ul>
+    <script src="/app.js"></script>
+</body>
+</html>
