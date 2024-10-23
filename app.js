@@ -1,131 +1,44 @@
-document.addEventListener('DOMContentLoaded', () => {
+
     let form = document.getElementById('user-form');
     const userList = document.getElementById('user-list');
-    const nameInput = document.getElementById('name');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
+    
     const userIdInput = document.getElementById('userId');
 
-    // Fetch all users when page loads
-    fetchUsers();
-
-    // Add or Update a User
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const name = nameInput.value;
-        const email = emailInput.value;
-        const password = passwordInput.value;
-        const userId = userIdInput.value;
-
-        // Ensure all fields are filled out
-        if (!name || !email || !password) {
-            alert('All fields are required.');
-            return;
-        }
-
-        // Determine whether to create or update a user
-        if (userId) {
-            // Update user
-            fetch(`/api/Users/${userId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ name, email, password })
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Failed to update user');
-                return response.json();
-            })
-            .then(() => {
-                resetForm();
-                fetchUsers();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        } else {
-            // Create new user
-            fetch('/api/Users', {
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();     // Prevent default form submission
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        try {
+            const response = await fetch('http://localhost:3000/add-customer', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ name, email, password }) // Include password when creating a user
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Failed to create user');
-                return response.json();
-            })
-            .then(() => {
-                resetForm();
-                fetchUsers();
-            })
-            .catch(error => {
-                console.error('Error:', error);
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                    Name: name,
+                }),
             });
+            // Check if the response is plain text or JSON
+        const contentType = response.headers.get('content-type');
+        let responseData;
+        if (contentType && contentType.includes('application/json')) {
+            responseData = await response.json();  // Parse JSON if the response is JSON
+        } else {
+            responseData = await response.text();  // Handle plain text response
+        }
+            if(!response.ok) {
+                throw new Error(responseData);
+            }
+            console.log(responseData);          // Display success message or error
+            alert(responseData);            // Show an alert to the user with the response
+             // Clear the form inputs after successful submission
+        form.reset();  // This will clear all the input fields
+        } catch (error) {
+            console.error('Error submitting form: ', error);
+            alert(`Error: ${error.message}`);
         }
     });
 
-    // Fetch all users
-    function fetchUsers() {
-        fetch('/api/users')
-        .then(response => {
-            if (!response.ok) throw new Error('Failed to fetch users');
-            return response.json();
-        })
-        .then(data => {
-            userList.innerHTML = ''; // Clear the user list
-            data.forEach(user => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    ${user.name} (${user.email})
-                    <div>
-                        <button class="edit" data-id="${user.id}">Edit</button>
-                        <button class="delete" data-id="${user.id}">Delete</button>
-                    </div>
-                `;
-                userList.appendChild(li);
-
-                // Edit user event
-                li.querySelector('.edit').addEventListener('click', () => {
-                    nameInput.value = user.name;
-                    emailInput.value = user.email;
-                    passwordInput.value = user.password; // Assume the password is being returned; otherwise, you may want to handle this differently
-                    userIdInput.value = user.id;
-                });
-
-                // Delete user event
-                li.querySelector('.delete').addEventListener('click', () => {
-                    deleteUser(user.id);
-                });
-            });
-        })
-        .catch(error => {
-            console.error('Error fetching users:', error);
-        });
-    }
-
-    // Delete a user
-    function deleteUser(id) {
-        fetch(`/api/users/${id}`, {
-            method: 'DELETE'
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Failed to delete user');
-            return fetchUsers(); // Refresh the user list after deletion
-        })
-        .catch(error => {
-            console.error('Error deleting user:', error);
-        });
-    }
-
-    // Reset the form after adding/updating
-    function resetForm() {
-        nameInput.value = '';
-        emailInput.value = '';
-        passwordInput.value = '';
-        userIdInput.value = '';
-    }
-});
