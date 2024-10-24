@@ -96,7 +96,7 @@ app.get('/', (req, res) => {
     })
   })
 
-  app.delete('/delete-user/email', (req, res) => {
+  app.delete('/delete-user/:email', (req, res) => {
     const userEmail = req.params.email;
 
     const sqlQuery = 'DELETE FROM customers WHERE email = ?';
@@ -114,6 +114,48 @@ app.get('/', (req, res) => {
     })
 
   })
+
+  app.put('/update-user/:email', (req, res) => {
+    const userEmail = req.params.email;
+    const { name, password} = req.body;
+
+     // Build the query dynamically based on provided fields
+     let updates = [];
+     let values = [];
+
+     if(name) {
+      updates.push('name = ?');
+      values.push(name);
+     }
+
+     if(password) {
+      updates.push('password = ?');
+      values.push(password);
+     }
+
+       // If no fields are provided, send an error response
+       if(updates.length === 0) {
+        return res.status(400).send("No fields to update");
+       }
+
+       values.push(userEmail);
+
+       const sqlQuery = `UPDATE customers SET ${updates.join(',')} WHERE email = ?`;
+
+       db.query(sqlQuery, values, (err, results) => {
+        if(err) {
+          console.log("Error updating user: ", err);
+          return res.status(500).send("Error updating user");
+        }
+
+        if(results.affectedRows === 0) {
+          return res.status(404).send('User not found');
+        }
+
+        res.send('User updated successfully');
+       })
+    
+  });
 
 //Start a server
 app.listen(port, () => {
